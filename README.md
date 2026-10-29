@@ -49,7 +49,7 @@ Cosmos3-Edge = **2B VL reasoner + rectified-flow 扩散动作专家**（MoT 单�
   掩码 + rotate_half RoPE，恒等 gather 保 position_ids 防 DCE）打穿，先经 `test_policy_decomposed.py`
   数值对拍（attention vs SDPA err~1e-7、rope vs LLaMA 公式 err=0）再导出。
 - ViT 注意力在 JetPack 6.2 无 legacy 后端（CuTe DSL 预编译件只有 sm_87+cuda13），是 reasoning visual
-  引擎的另一道墙，详见技术文档。
+  引擎的另一道墙。**完整六道兼容墙、分解注意力/RoPE 补丁与动作表示见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**。
 
 ## 仓库结构
 
@@ -57,7 +57,7 @@ Cosmos3-Edge = **2B VL reasoner + rectified-flow 扩散动作专家**（MoT 单�
 eval/policy/        DROID 操作评测：W3 帧敏感性 + W4 conditioning 敏感性（脚本 + 证据 JSON）
 scripts/orin/       Orin 部署脚本：TRTEdge build / reasoning+policy engine build / 分解注意力补丁
 site/cosmos3-demo/  reasoning 自由描述 demo（gh-pages 源，4 公开 clip）
-docs/               技术文档
+docs/DEPLOYMENT.md  部署细节：六道 JetPack 6.2 兼容墙 + 分解注意力/RoPE 补丁 + 动作表示
 ```
 
 ## 许可与数据来源
