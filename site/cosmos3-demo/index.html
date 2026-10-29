@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cosmos3-Edge 2B Reasoner · Jetson Orin 驾驶场景理解 Demo</title>
+<meta name="description" content="Cosmos3-Edge 2B reasoner 部署在 Jetson Orin（TRTEdge，分解注意力），对真实驾驶视频帧做自由场景描述。真实 Orin 推理输出。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🚗</text></svg>">
+<!-- 共享演示页外壳（配色/页头/章节/页脚统一，单一事实源在主站 public/demo-shell.css） -->
+<link rel="stylesheet" href="https://ranpin.github.io/demo-shell.css">
+<!-- 明暗主题：同步加载，首屏绘制前应用已存主题，避免闪烁 -->
+<script src="https://ranpin.github.io/theme.js"></script>
+<style>
+  /* 本页专属组件（徽章/提示框/场景选择/胶片条/描述面板），结构色一律引用外壳 --ds-* 变量 */
+  .c3-badges{display:flex;flex-wrap:wrap;gap:8px;margin:.2rem 0 8px}
+  .c3-badge{background:var(--ds-accent-soft);color:var(--ds-accent-strong);border:1px solid var(--ds-accent-ring);
+    border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600}
+  .callout{padding:15px 17px;border-radius:8px;margin:16px 0;border-left:4px solid var(--ds-accent);
+    background:var(--ds-accent-soft);font-size:14.5px;line-height:1.7}
+  .callout.warn{border-left-color:var(--ds-warn);background:var(--ds-warn-soft)}
+  .callout .t{font-weight:700;font-size:13px;margin-bottom:4px;color:var(--ds-text)}
+  .callout a{color:var(--ds-accent)}
+  .clip-sel{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 18px;justify-content:center}
+  .clip-btn{background:var(--ds-panel);border:1px solid var(--ds-border);border-radius:8px;padding:9px 14px;
+    cursor:pointer;font-size:13.5px;color:var(--ds-muted);transition:all .15s;font-family:inherit}
+  .clip-btn:hover{border-color:var(--ds-accent);color:var(--ds-accent)}
+  .clip-btn.active{background:var(--ds-accent);border-color:var(--ds-accent);color:#fff;font-weight:600}
+  .filmstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+  .filmstrip figure{margin:0;background:var(--ds-panel);border:1px solid var(--ds-border);border-radius:6px;overflow:hidden}
+  .filmstrip img{width:100%;height:auto;display:block}
+  .filmstrip figcaption{font-size:11px;color:var(--ds-faint);text-align:center;padding:3px 0}
+  .desc-panel{background:var(--ds-panel);border:1px solid var(--ds-border);border-left:4px solid var(--ds-accent);
+    border-radius:8px;padding:16px 18px;margin:16px 0}
+  .desc-panel .lbl{font-size:12px;font-weight:700;color:var(--ds-accent-strong);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+  .desc-panel .txt{font-size:15px;color:var(--ds-text);line-height:1.7}
+  .desc-panel .note{font-size:12px;color:var(--ds-faint);margin-top:8px}
+  .c3-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;background:var(--ds-panel);
+    border:1px solid var(--ds-border);border-radius:10px;overflow:hidden}
+  .c3-table th,.c3-table td{padding:8px 12px;border:1px solid var(--ds-border);text-align:left;vertical-align:top}
+  .c3-table th{background:var(--ds-code-bg);color:var(--ds-muted);font-weight:600}
+  @media(max-width:720px){.filmstrip{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+  <header class="ds-header">
+    <div class="ds-header__inner">
+      <div class="ds-header__row">
+        <a class="ds-home" href="https://ranpin.github.io/">← 返回主页</a>
+        <h1>Cosmos3-Edge 驾驶场景理解 Demo</h1>
+        <button class="ds-theme-btn" type="button" onclick="toggleTheme()" aria-label="切换明暗主题"><span class="ds-theme-icon">🌙</span></button>
+      </div>
+      <p class="ds-header__sub">第二部署目标 Cosmos3-Edge（4B 全模态世界模型）的 2B VL reasoner，部署在 Jetson Orin，对真实驾驶视频帧做自由场景描述。</p>
+    </div>
+  </header>
+
+  <div class="ds-wrap">
+    <div class="c3-badges">
+      <span class="c3-badge">Cosmos3-Edge 2B</span><span class="c3-badge">FP16</span>
+      <span class="c3-badge">Jetson Orin sm_87</span><span class="c3-badge">TensorRT-Edge-LLM</span>
+      <span class="c3-badge">分解注意力（K4/K6）</span><span class="c3-badge">真实 Orin 推理输出</span>
+    </div>
+
+    <section class="ds-section">
+      <h2 class="ds-h2">演示</h2>
+      <p class="ds-muted" style="font-size:14px;margin:0 0 4px">4 个真实驾驶 clip（各均匀采样 6 帧，前视广角相机）。点击场景切换，点击帧放大。</p>
+      <div class="clip-sel" id="clipSel"></div>
+      <div class="filmstrip" id="filmstrip"></div>
+      <div class="desc-panel">
+        <div class="lbl">Cosmos3-Edge 场景描述（模型原始输出 · 英文）</div>
+        <div class="txt" id="descText"></div>
+        <div class="note">greedy 解码，max 200 tokens，6 帧 @448×256 输入，单次推理 ~0.9s（Jetson Orin）。</div>
+      </div>
+    </section>
+
+    <section class="ds-section">
+      <h2 class="ds-h2">评测结果</h2>
+      <p class="ds-muted" style="font-size:14px;margin:0 0 4px">测试数据集：自建驾驶域基准 n=184——PhysicalAI-AV 真实帧 + 人工校验的 8 选 1 单选标注（随机基线 12.5%），单一评测集、无训练/测试划分。上方演示是自由描述（定性），这里是 reasoner 在同一基准下的定量精度。完整口径与诚实边界见 <a href="../cosmos3.html">Phase W 报告 §W.2</a>。</p>
+      <table class="c3-table">
+        <caption>表 1 · 自建驾驶域基准（n=184）上的精度对比</caption>
+        <tr><th>模型</th><th>n=184 精度</th><th>说明</th></tr>
+        <tr><td><strong>Cosmos3-Edge 2B FP16（本页演示模型）</strong></td><td><strong>42.4%</strong></td><td>Wilson 95% CI [35.5, 49.6] · 3.4× 随机基线（12.5%）</td></tr>
+        <tr><td>Cosmos-Reason2-8B FP16</td><td>51.6%</td><td>上代 8B 基线</td></tr>
+        <tr><td>Cosmos-Reason2-8B INT8</td><td>47.8%</td><td>−3.8 pts</td></tr>
+        <tr><td>Cosmos-Reason2-8B INT4</td><td>50.5%</td><td>−1.1 pts</td></tr>
+      </table>
+      <p class="ds-muted" style="font-size:13px;margin-top:8px">跨代对比：Cosmos3-Edge 2B 比上代 Cosmos-Reason2-8B FP16 低 9.2 pts（McNemar p=0.0115，显著）——<strong>缩小模型不免费</strong>；而 8B 的量化版（INT8/INT4）相对 FP16 掉点很小——<strong>量化几乎免费</strong>。Cosmos3-Edge 2B 仍达随机基线 3.4×、具备真实场景理解；184/184 全部 EOS、零解析失败。</p>
+    </section>
+
+    <section class="ds-section">
+      <h2 class="ds-h2">核心方法</h2>
+      <table class="c3-table">
+        <caption>表 2 · 部署配置与关键口径</caption>
+        <tr><th>项</th><th>值</th></tr>
+        <tr><td>模型</td><td>Cosmos3-Edge（4B 全模态 = 2B VL reasoner + rectified-flow 扩散专家），本页用 reasoner</td></tr>
+        <tr><td>引擎</td><td>FP16，llm 3.7G + visual 940M（<strong>分解注意力版</strong>，K4/K6 绕过 TRT-11-only 算子墙）</td></tr>
+        <tr><td>硬件 / 运行时</td><td>Jetson Orin sm_87 · JetPack 6.2 · TensorRT 10.7 · TRTEdge v0.10.1</td></tr>
+        <tr><td>输入</td><td>6 帧 @448×256 + 自由描述 prompt（maxInputLen 2048）</td></tr>
+        <tr><td>输出</td><td>自由场景描述（greedy，max 200 tokens）</td></tr>
+        <tr><td>延迟</td><td>~0.9 s / 请求（n=184 基准口径）</td></tr>
+      </table>
+    </section>
+
+    <footer class="ds-footer">
+      <div style="margin-bottom:8px"><strong>行车视频帧署名</strong>：NVIDIA <a href="https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles" target="_blank" rel="noopener">PhysicalAI-Autonomous-Vehicles</a> 数据集的公开 sample slice（Voxel51 抽样，<a href="https://huggingface.co/datasets/dgural/PhysicalAI-AV-Sample" target="_blank" rel="noopener">dgural/PhysicalAI-AV-Sample</a>），仅用于本演示；其许可继承原 NVIDIA 数据集（见该 sample 的 License 说明）。</div>
+      <div style="margin-bottom:8px"><strong>模型</strong>：Cosmos3-Edge（NVIDIA，OpenMDW1.1）。<strong>部署工具</strong>：TensorRT-Edge-LLM v0.10.1（NVIDIA）。</div>
+      <div style="margin-bottom:8px">场景描述为 Cosmos3-Edge 在 Jetson Orin 上的真实推理输出；帧为公开 sample 原始帧（缩放到 448）。</div>
+      <div>代码与部署细节见 <a href="https://github.com/ranpin/cosmos3-edge">github.com/ranpin/cosmos3-edge</a></div>
+    </footer>
+  </div>
+
+<script>
+const CLIPS=[
+ {id:'01d3588e',label:'商业区 · 白天',desc:'The scene depicted in these six frames shows a driving sequence through a commercial area. The road is a single-lane, bidirectional street with vehicles parked on both sides. The environment is well lit, suggesting it is daytime, and the weather is clear. There are no vehicles or pedestrians in the roadway, and no traffic signs or signals are visible.'},
+ {id:'26f8dc7e',label:'施工区 · 锥桶',desc:'This frame shows a wide shot of a road with multiple lanes and traffic moving in both directions. The road is lined with orange traffic cones, indicating a construction zone or lane closure. There are several vehicles, including a black SUV in the foreground, and a white car ahead. The sky is overcast, and the lighting is dim. The traffic lights are green, and there are trees and buildings visible in the background.'},
+ {id:'69cf2443',label:'夜间 · 左转路口',desc:'The scene depicts a nighttime driving sequence captured from a front-facing camera mounted on a moving vehicle. The road is a two-lane, one-way street with a dedicated left-turn lane, and the layout includes a visible crosswalk. The environment is illuminated by streetlights, and the sky is dark, indicating nighttime conditions. There are no pedestrians or cyclists visible in the scene. The road surface appears clear, and there are no visible weather-related hazards. The driver is following a vehicle ahead, and the presence of a traffic light ahead suggests the need for attention to signal changes.'},
+ {id:'c3ca785e',label:'夜间 · Stop Sign + 行人',desc:'The scene depicts a nighttime driving environment on a collector road with a single lane in each direction. The road is well lit by street lights, and there are no traffic lights present. A stop sign is positioned on the right side of the road, requiring vehicles to come to a complete stop and wait before proceeding. The road surface is dry and clean, with no visible obstacles or curbs. There are no traffic lights present. There are cars parked on the right side of the road. Pedestrians are visible on the right side of the road. The driver should be aware of the pedestrians and maintain a safe distance from them to avoid a collision.'}
+];
+let cur=0;
+function render(){
+  const c=CLIPS[cur];
+  const sel=document.getElementById('clipSel');
+  sel.innerHTML=CLIPS.map((x,i)=>`<button class="clip-btn${i===cur?' active':''}" onclick="selectClip(${i})">${x.label}</button>`).join('');
+  const fs=document.getElementById('filmstrip');
+  fs.innerHTML=[1,2,3,4,5,6].map(n=>`<figure><img src="frames/${c.id}/frame_${n}.jpg" alt="frame ${n}" loading="lazy"><figcaption>frame ${n}</figcaption></figure>`).join('');
+  document.getElementById('descText').textContent=c.desc;
+}
+function selectClip(i){cur=i;render();}
+render();
+</script>
+</body>
+</html>
