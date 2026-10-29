@@ -58,6 +58,7 @@ eval/policy/        DROID 操作评测：W3 帧敏感性 + W4 conditioning 敏�
 scripts/orin/       Orin 部署脚本：TRTEdge build / reasoning+policy engine build / 分解注意力补丁
 site/cosmos3-demo/  reasoning 自由描述 demo（gh-pages 源，4 公开 clip）
 docs/DEPLOYMENT.md  部署细节：六道 JetPack 6.2 兼容墙 + 分解注意力/RoPE 补丁 + 动作表示
+docs/PROBLEMS.md    工程问题记录（§K/§L，迁自 alpamayo-edge）：现象 → 根因 → 解决 → 教训
 ```
 
 ## 许可与数据来源

@@ -8,7 +8,8 @@
 > 本页从 alpamayo-edge 的 Phase W 报告拆分而来。**跨代精度对比**（Cosmos3-Edge 2B vs 上一代 CR2-8B 量化版，
 > n=184 驾驶域，「缩小不免费、量化几乎免费」）属 alpamayo-edge「一套管线部署多代模型」主线，见
 > [alpamayo-edge](https://ranpin.github.io/alpamayo-edge/cosmos3.html)；**policy 动作链评测**（W3 帧敏感性 /
-> W4 conditioning 敏感性）见本仓 [`eval/README.md`](../eval/README.md)。
+> W4 conditioning 敏感性）见本仓 [`eval/README.md`](../eval/README.md)；逐问题工程记录（现象 → 根因 → 解决 → 教训）
+> 见 [PROBLEMS.md](PROBLEMS.md)。
 
 ## 一、六道 JetPack 6.2 兼容墙与打通
 

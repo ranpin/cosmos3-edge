@@ -2,7 +2,8 @@
 
 `nvidia/Cosmos3-Edge`（4B 全模态世界模型 = 2B VL reasoner + rectified-flow 扩散专家，MoT 单塔）
 在 Jetson AGX Orin 上的两条能力线评测。部署链路与 JetPack 6.2 兼容墙、policy 动作链能力边界的
-完整技术记录见 alpamayo-edge 仓 `docs/PROBLEMS.md` §K/§L（本研究主线的内部技术文档）。
+完整技术记录见本仓 [`docs/PROBLEMS.md`](../docs/PROBLEMS.md) §K/§L（迁自 alpamayo-edge）与
+[`docs/DEPLOYMENT.md`](../docs/DEPLOYMENT.md)。
 
 🎬 **在线 Demo（reasoning 侧自由场景描述，真实 Orin 推理输出）**：
 <https://ranpin.github.io/cosmos3-edge/cosmos3-demo/>（源在 `site/cosmos3-demo/`）
