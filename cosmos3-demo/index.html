@@ -94,8 +94,8 @@
         <tr><td>模型</td><td>Cosmos3-Edge（4B 全模态 = 2B VL reasoner + rectified-flow 扩散专家），本页用 reasoner</td></tr>
         <tr><td>引擎</td><td>FP16，llm 3.7G + visual 940M（<strong>分解注意力版</strong>，K4/K6 绕过 TRT-11-only 算子墙）</td></tr>
         <tr><td>硬件 / 运行时</td><td>Jetson Orin sm_87 · JetPack 6.2 · TensorRT 10.7 · TRTEdge v0.10.1</td></tr>
-        <tr><td>输入</td><td>6 帧 @448×256 + 自由描述 prompt（maxInputLen 2048）</td></tr>
-        <tr><td>输出</td><td>自由场景描述（greedy，max 200 tokens）</td></tr>
+        <tr><td>输入</td><td><strong>自由描述（演示）</strong>：6 帧 @448×256 + 自由描述 prompt（maxInputLen 2048）；<strong>8 选 1 单选（评测 n=184）</strong>：6 帧（前视广角 120° 相机）+ 问题与 8 个选项</td></tr>
+        <tr><td>输出</td><td><strong>自由描述</strong>：自由场景描述文本（greedy，max 200 tokens）；<strong>单选</strong>：选项字母（如 "B"，经 parse_choice 解析，n=184 上 unparsed=0）</td></tr>
         <tr><td>延迟</td><td>~0.9 s / 请求（n=184 基准口径）</td></tr>
       </table>
     </section>
