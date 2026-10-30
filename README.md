@@ -16,7 +16,7 @@ Cosmos3-Edge = **2B VL reasoner + rectified-flow 扩散动作专家**（MoT 单�
 - **Reasoning**：图 + 文 → 场景理解 / 自由描述（AV 驾驶域）。
 - **Policy**：图 + 指令 + 状态 → 动作 chunk（官方权重仅 DROID 机器人操作域）。
 
-## 两条能力线
+## 核心结果
 
 ### 1. AV Reasoning —— 已验证 works
 
@@ -40,6 +40,12 @@ Cosmos3-Edge = **2B VL reasoner + rectified-flow 扩散动作专家**（MoT 单�
   归一化）与社区 lerobot GT（7 维笛卡尔）表示/归一化不同、无法直接对照。⇒ policy 定位为
   **「部署打通 + conditioning 弱耦合边界（根因未定）」**，demo 锚定已验证 works 的 reasoning 侧。
 
+## 快速开始
+
+推理引擎构建与 Orin 部署的完整步骤（六道 JetPack 6.2 兼容墙 + 分解注意力/RoPE 补丁）见
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)；reasoning 侧在线 demo（顶部链接）为真实 Orin 推理输出，
+n=184 基准的复现命令与产物见 `eval/`。推理需 Jetson AGX Orin 实机，无消费级一键入口。
+
 ## 边缘部署要点
 
 - **TRTEdge 0.10.1**，Jetson AGX Orin（sm_87 / JetPack 6.2 / CUDA 12.6 / TRT 10.7）。
@@ -51,7 +57,7 @@ Cosmos3-Edge = **2B VL reasoner + rectified-flow 扩散动作专家**（MoT 单�
 - ViT 注意力在 JetPack 6.2 无 legacy 后端（CuTe DSL 预编译件只有 sm_87+cuda13），是 reasoning visual
   引擎的另一道墙。**完整六道兼容墙、分解注意力/RoPE 补丁与动作表示见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**。
 
-## 仓库结构
+## 仓库结构与文档导航
 
 ```
 eval/policy/        DROID 操作评测：W3 帧敏感性 + W4 conditioning 敏感性（脚本 + 证据 JSON）
