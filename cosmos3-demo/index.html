@@ -91,48 +91,135 @@
     <section class="ds-section">
       <h2 class="ds-h2">核心方法</h2>
       <div class="ds-dgwrap">
-        <svg class="ds-dg" viewBox="0 0 980 306" role="img" aria-label="Cosmos3-Edge 2B reasoner 的 Orin 推理链：左侧两个输入（6 帧 @448×256 前视广角 120° 相机、prompt 自由描述或问题加 8 选项）进入 Jetson Orin · TRT 10.7 · TRTEdge 0.10.1 部署区，区内 visual 引擎 940M（分解注意力 K4/K6 补丁，绕开 TRT-11-only 算子墙）串到 llm 引擎 3.7G（2B VL reasoner · FP16），右侧输出自由场景描述（greedy · max 200 tokens，演示）与 8 选 1 单选字母（parse_choice · n=184 · unparsed=0，评测）；~0.9 s / 请求（n=184 口径）">
+        <svg class="ds-dg" viewBox="0 0 980 306" role="img" aria-label="Cosmos3-Edge 2B reasoner 的 Orin 推理链（动态图）：数据包沿 6 帧 @448×256 前视广角 120° 相机 → visual 引擎 940M（分解注意力 K4/K6 补丁，绕开 TRT-11-only 算子墙）→ llm 引擎 3.7G（2B VL reasoner · FP16）穿行，经过的节点逐个脉冲亮起；prompt（自由描述或问题加 8 选项）直入 llm 引擎；推理结果交替驶向自由场景描述（greedy · max 200 tokens，演示）与 8 选 1 单选字母（parse_choice · n=184 · unparsed=0，评测）双输出；部署于 Jetson Orin · TRT 10.7 · TRTEdge 0.10.1，~0.9 s / 请求（n=184 口径）">
           <defs>
             <marker id="c3-dg-arr" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
               <polygon points="0 0, 9 3.5, 0 7" fill="var(--ds-faint)"/>
             </marker>
+            <!-- 视觉层·渐变立体盒：两 stop 属性值均为纯色回退，外壳 CSS 把末 stop 升级为 color-mix 加深（随主题翻转） -->
+            <linearGradient id="c3-g-accent" class="dg-grad" data-c="accent" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--ds-accent-soft)"/>
+              <stop offset="1" stop-color="var(--ds-accent-soft)"/>
+            </linearGradient>
+            <linearGradient id="c3-g-alt" class="dg-grad" data-c="alt" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--ds-alt-soft)"/>
+              <stop offset="1" stop-color="var(--ds-alt-soft)"/>
+            </linearGradient>
+            <linearGradient id="c3-g-ok" class="dg-grad" data-c="ok" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--ds-ok-soft)"/>
+              <stop offset="1" stop-color="var(--ds-ok-soft)"/>
+            </linearGradient>
+            <linearGradient id="c3-g-danger" class="dg-grad" data-c="danger" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--ds-danger-soft)"/>
+              <stop offset="1" stop-color="var(--ds-danger-soft)"/>
+            </linearGradient>
+            <!-- 图标 symbol：复制自 demo-page-iteration skill assets/dg-icons.svg（外部 use 引用 Chrome/Safari 静默失败，必须内联） -->
+            <symbol id="ico-camera" viewBox="0 0 24 24"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.7l1.4-2h6.8l1.4 2h1.7A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.5" r="3.5"/></symbol>
+            <symbol id="ico-text" viewBox="0 0 24 24"><path d="M5 5h14M5 10h14M5 15h9M5 20h5"/></symbol>
+            <symbol id="ico-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M21 15l-5-5-9 9"/></symbol>
+            <symbol id="ico-layers" viewBox="0 0 24 24"><polygon points="12 2 22 7.5 12 13 2 7.5"/><path d="M2 12.5l10 5.5 10-5.5M2 17l10 5.5 10-5.5"/></symbol>
+            <symbol id="ico-brackets" viewBox="0 0 24 24"><path d="M8 4l-4 8 4 8M16 4l4 8-4 8"/></symbol>
+            <symbol id="ico-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/></symbol>
           </defs>
           <!-- 层 1：部署区域边界（琥珀 warn = 硬件/部署） -->
           <rect class="dg-region" x="228" y="40" width="444" height="212" rx="10" style="stroke:var(--ds-warn)"/>
           <text class="dg-tag" x="450" y="64" text-anchor="middle" fill="var(--ds-warn)">Jetson Orin · TRT 10.7 · TRTEdge 0.10.1</text>
-          <!-- 层 2：连线 -->
-          <line class="dg-edge" x1="180" y1="116" x2="248" y2="116" marker-end="url(#c3-dg-arr)"/>
-          <path class="dg-edge" d="M180 232 H555 V150" marker-end="url(#c3-dg-arr)"/>
-          <line class="dg-edge" x1="398" y1="116" x2="470" y2="116" marker-end="url(#c3-dg-arr)"/>
-          <line class="dg-edge dg-dash" x1="327" y1="146" x2="327" y2="170" marker-end="url(#c3-dg-arr)"/>
-          <path class="dg-edge" d="M636 116 H692"/>
-          <line class="dg-edge" x1="692" y1="116" x2="731" y2="116" marker-end="url(#c3-dg-arr)"/>
-          <path class="dg-edge" d="M692 116 V232 H731" marker-end="url(#c3-dg-arr)"/>
-          <!-- 层 3：盒子（蓝 accent = 输入 · 紫 alt = 模型/推理 · 绿 ok = 输出 · 红 danger = 补丁） -->
-          <rect x="30" y="86" width="150" height="60" rx="8" fill="var(--ds-accent-soft)" stroke="var(--ds-accent)" stroke-width="1.4"/>
-          <rect x="30" y="202" width="150" height="60" rx="8" fill="var(--ds-accent-soft)" stroke="var(--ds-accent)" stroke-width="1.4"/>
-          <rect x="252" y="86" width="150" height="60" rx="8" fill="var(--ds-alt-soft)" stroke="var(--ds-alt)" stroke-width="1.4"/>
-          <rect x="474" y="86" width="162" height="60" rx="8" fill="var(--ds-alt-soft)" stroke="var(--ds-alt)" stroke-width="1.4"/>
-          <rect x="244" y="174" width="166" height="30" rx="15" fill="var(--ds-danger-soft)" stroke="var(--ds-danger-ring)"/>
-          <rect x="735" y="86" width="215" height="60" rx="8" fill="var(--ds-ok-soft)" stroke="var(--ds-ok)" stroke-width="1.4"/>
-          <rect x="735" y="202" width="215" height="60" rx="8" fill="var(--ds-ok-soft)" stroke="var(--ds-ok)" stroke-width="1.4"/>
-          <!-- 层 4：文字 -->
-          <text class="dg-name" x="105" y="112" text-anchor="middle">6 帧 @448×256</text>
-          <text class="dg-sub" x="105" y="126" text-anchor="middle">前视广角 120° 相机</text>
-          <text class="dg-name" x="105" y="228" text-anchor="middle">prompt</text>
-          <text class="dg-sub" x="105" y="242" text-anchor="middle">自由描述 / 问题+8 选项</text>
-          <text class="dg-name" x="327" y="112" text-anchor="middle">visual 引擎 940M</text>
-          <text class="dg-sub" x="327" y="126" text-anchor="middle">分解注意力 K4/K6 补丁</text>
-          <text class="dg-name" x="555" y="112" text-anchor="middle">llm 引擎 3.7G</text>
-          <text class="dg-sub" x="555" y="126" text-anchor="middle">2B VL reasoner · FP16</text>
-          <text class="dg-tag" x="327" y="193" text-anchor="middle" fill="var(--ds-danger)">绕开 TRT-11-only 算子墙</text>
-          <text class="dg-name" x="842.5" y="112" text-anchor="middle">自由场景描述</text>
-          <text class="dg-sub" x="842.5" y="126" text-anchor="middle">greedy · max 200 tokens（演示）</text>
-          <text class="dg-name" x="842.5" y="221" text-anchor="middle">8 选 1 单选字母</text>
-          <text class="dg-sub" x="842.5" y="234" text-anchor="middle">parse_choice · n=184</text>
-          <text class="dg-sub" x="842.5" y="248" text-anchor="middle">unparsed=0（评测）</text>
+          <!-- 层 2：连线（data-from/to 供悬停聚焦-上下文；llm→双输出经 (692,116) 分岔点，两段边同归该逻辑边） -->
+          <line class="dg-edge" data-from="c3-frames" data-to="c3-visual" x1="180" y1="116" x2="248" y2="116" marker-end="url(#c3-dg-arr)"/>
+          <path class="dg-edge" data-from="c3-prompt" data-to="c3-llm" d="M180 232 H555 V150" marker-end="url(#c3-dg-arr)"/>
+          <line class="dg-edge" data-from="c3-visual" data-to="c3-llm" x1="398" y1="116" x2="470" y2="116" marker-end="url(#c3-dg-arr)"/>
+          <line class="dg-edge dg-dash" data-from="c3-visual" data-to="c3-patch" x1="327" y1="146" x2="327" y2="170" marker-end="url(#c3-dg-arr)"/>
+          <path class="dg-edge" data-from="c3-llm" data-to="c3-desc" d="M636 116 H692"/>
+          <line class="dg-edge" data-from="c3-llm" data-to="c3-desc" x1="692" y1="116" x2="731" y2="116" marker-end="url(#c3-dg-arr)"/>
+          <path class="dg-edge" data-from="c3-llm" data-to="c3-choice" d="M692 116 V232 H731" marker-end="url(#c3-dg-arr)"/>
+          <!-- 层 3：脉冲环（与对应包同 dur 同 begin，keyTimes 按包到达时刻开槽；输出环按各自分支包到达 .25/.75） -->
+          <rect class="dg-ring" x="27" y="83" width="156" height="66" rx="11" stroke="var(--ds-accent)" opacity="0">
+            <animate attributeName="opacity" values="0;.85;0;0" keyTimes="0;.05;.2;1" dur="4.5s" begin="indefinite" repeatCount="indefinite"/>
+          </rect>
+          <rect class="dg-ring" x="249" y="83" width="156" height="66" rx="11" stroke="var(--ds-alt)" opacity="0">
+            <animate attributeName="opacity" values="0;0;.85;0;0" keyTimes="0;.483;.533;.683;1" dur="4.5s" begin="indefinite" repeatCount="indefinite"/>
+          </rect>
+          <rect class="dg-ring" x="471" y="83" width="168" height="66" rx="11" stroke="var(--ds-alt)" opacity="0">
+            <animate attributeName="opacity" values="0;0;.85;0" keyTimes="0;.82;.86;1" dur="4.5s" begin="indefinite" repeatCount="indefinite"/>
+          </rect>
+          <rect class="dg-ring" x="732" y="83" width="221" height="66" rx="11" stroke="var(--ds-ok)" opacity="0">
+            <animate attributeName="opacity" values="0;0;.85;0;0" keyTimes="0;.24;.29;.44;1" dur="4s" begin="indefinite" repeatCount="indefinite"/>
+          </rect>
+          <rect class="dg-ring" x="732" y="199" width="221" height="66" rx="11" stroke="var(--ds-ok)" opacity="0">
+            <animate attributeName="opacity" values="0;0;.85;0;0" keyTimes="0;.74;.79;.94;1" dur="4s" begin="indefinite" repeatCount="indefinite"/>
+          </rect>
+          <!-- 层 4：数据包（画在盒下层、不透明盒遮挡 → 只在盒间空隙可见 = 逐环节穿行）。
+               主链包 帧→visual→llm 持续匀速；A/B 分支包同 4s 周期靠 keyTimes 错峰交替驶向双输出，停靠时在盒下隐藏 -->
+          <g transform="translate(105,116)"><g class="dg-packet-g" opacity="0">
+            <circle r="8" fill="var(--ds-accent)" opacity=".22"/>
+            <circle r="3.2" fill="var(--ds-accent)"/>
+            <animateMotion dur="4.5s" begin="indefinite" repeatCount="indefinite" calcMode="linear" path="M0,0 H450"/>
+            <animate attributeName="opacity" from="1" to="1" dur="4.5s" begin="indefinite" repeatCount="indefinite"/>
+          </g></g>
+          <g transform="translate(555,116)"><g class="dg-packet-g" opacity="0">
+            <circle r="6.5" fill="var(--ds-alt)" opacity=".2"/>
+            <circle r="2.8" fill="var(--ds-alt)"/>
+            <animateMotion dur="4s" begin="indefinite" repeatCount="indefinite" calcMode="linear" keyPoints="0;1;1" keyTimes="0;.25;1" path="M0,0 H287.5"/>
+            <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.03;.22;.25;1" dur="4s" begin="indefinite" repeatCount="indefinite"/>
+          </g></g>
+          <g transform="translate(555,116)"><g class="dg-packet-g" opacity="0">
+            <circle r="6.5" fill="var(--ds-alt)" opacity=".2"/>
+            <circle r="2.8" fill="var(--ds-alt)"/>
+            <animateMotion dur="4s" begin="indefinite" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;.5;.75;1" path="M0,0 H137 V116 H150.5"/>
+            <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.5;.53;.72;.75;1" dur="4s" begin="indefinite" repeatCount="indefinite"/>
+          </g></g>
+          <!-- 层 5：节点组（data-id 供悬停聚焦、--dg-i 入场序号=数据流序、--dg-glow 悬停光效色；分支输入 prompt 与补丁盒排最后） -->
+          <g class="dg-node" data-id="c3-frames" style="--dg-glow:var(--ds-accent);--dg-i:0">
+            <rect x="30" y="86" width="150" height="60" rx="8" fill="url(#c3-g-accent)" stroke="var(--ds-accent)" stroke-width="1.4"/>
+            <use class="dg-ico" href="#ico-camera" x="39" y="95" width="14" height="14" style="color:var(--ds-accent)"/>
+            <text class="dg-name" x="105" y="112" text-anchor="middle">6 帧 @448×256</text>
+            <text class="dg-sub" x="105" y="126" text-anchor="middle">前视广角 120° 相机</text>
+          </g>
+          <g class="dg-node" data-id="c3-visual" style="--dg-glow:var(--ds-alt);--dg-i:1">
+            <rect x="252" y="86" width="150" height="60" rx="8" fill="url(#c3-g-alt)" stroke="var(--ds-alt)" stroke-width="1.4"/>
+            <use class="dg-ico" href="#ico-image" x="261" y="95" width="14" height="14" style="color:var(--ds-alt)"/>
+            <text class="dg-name" x="327" y="112" text-anchor="middle">visual 引擎 940M</text>
+            <text class="dg-sub" x="327" y="126" text-anchor="middle">分解注意力 K4/K6 补丁</text>
+          </g>
+          <g class="dg-node" data-id="c3-llm" style="--dg-glow:var(--ds-alt);--dg-i:2">
+            <rect x="474" y="86" width="162" height="60" rx="8" fill="url(#c3-g-alt)" stroke="var(--ds-alt)" stroke-width="1.4"/>
+            <use class="dg-ico" href="#ico-layers" x="483" y="95" width="14" height="14" style="color:var(--ds-alt)"/>
+            <text class="dg-name" x="555" y="112" text-anchor="middle">llm 引擎 3.7G</text>
+            <text class="dg-sub" x="555" y="126" text-anchor="middle">2B VL reasoner · FP16</text>
+          </g>
+          <g class="dg-node" data-id="c3-desc" style="--dg-glow:var(--ds-ok);--dg-i:3">
+            <rect x="735" y="86" width="215" height="60" rx="8" fill="url(#c3-g-ok)" stroke="var(--ds-ok)" stroke-width="1.4"/>
+            <use class="dg-ico" href="#ico-brackets" x="744" y="95" width="14" height="14" style="color:var(--ds-ok)"/>
+            <text class="dg-name" x="842.5" y="112" text-anchor="middle">自由场景描述</text>
+            <text class="dg-sub" x="842.5" y="126" text-anchor="middle">greedy · max 200 tokens（演示）</text>
+          </g>
+          <g class="dg-node" data-id="c3-choice" style="--dg-glow:var(--ds-ok);--dg-i:4">
+            <rect x="735" y="202" width="215" height="60" rx="8" fill="url(#c3-g-ok)" stroke="var(--ds-ok)" stroke-width="1.4"/>
+            <use class="dg-ico" href="#ico-radio" x="744" y="211" width="14" height="14" style="color:var(--ds-ok)"/>
+            <text class="dg-name" x="842.5" y="221" text-anchor="middle">8 选 1 单选字母</text>
+            <text class="dg-sub" x="842.5" y="234" text-anchor="middle">parse_choice · n=184</text>
+            <text class="dg-sub" x="842.5" y="248" text-anchor="middle">unparsed=0（评测）</text>
+          </g>
+          <g class="dg-node" data-id="c3-prompt" style="--dg-glow:var(--ds-accent);--dg-i:5">
+            <rect x="30" y="202" width="150" height="60" rx="8" fill="url(#c3-g-accent)" stroke="var(--ds-accent)" stroke-width="1.4"/>
+            <use class="dg-ico" href="#ico-text" x="39" y="211" width="14" height="14" style="color:var(--ds-accent)"/>
+            <text class="dg-name" x="105" y="228" text-anchor="middle">prompt</text>
+            <text class="dg-sub" x="105" y="242" text-anchor="middle">自由描述 / 问题+8 选项</text>
+          </g>
+          <g class="dg-node" data-id="c3-patch" style="--dg-glow:var(--ds-danger);--dg-i:6">
+            <rect x="244" y="174" width="166" height="30" rx="15" fill="url(#c3-g-danger)" stroke="var(--ds-danger-ring)"/>
+            <text class="dg-tag" x="327" y="193" text-anchor="middle" fill="var(--ds-danger)">绕开 TRT-11-only 算子墙</text>
+          </g>
+          <!-- 层 6：底部脚注 -->
           <text class="dg-note" x="490" y="282" text-anchor="middle">~0.9 s / 请求（n=184 口径）</text>
         </svg>
+        <div class="dg-legend">
+          <span style="--c:var(--ds-accent)"><i></i>输入 / 数据</span>
+          <span style="--c:var(--ds-alt)"><i></i>模型推理</span>
+          <span style="--c:var(--ds-warn)"><i></i>硬件部署</span>
+          <span style="--c:var(--ds-ok)"><i></i>输出结果</span>
+          <span style="--c:var(--ds-danger)"><i></i>问题 / 补丁</span>
+        </div>
       </div>
       <p class="ds-figcap">图 1 · Cosmos3-Edge 2B reasoner 的 Orin 推理链：6 帧 + prompt → visual / llm 双引擎（分解注意力补丁绕开 TRT-11-only 算子墙）→ 自由描述（演示）与 8 选 1 单选（评测 n=184）两种输出</p>
       <div class="ds-tablewrap">
