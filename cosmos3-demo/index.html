@@ -34,10 +34,10 @@
   .desc-panel .lbl{font-size:12px;font-weight:700;color:var(--ds-accent-strong);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
   .desc-panel .txt{font-size:15px;color:var(--ds-text);line-height:1.7}
   .desc-panel .note{font-size:12px;color:var(--ds-faint);margin-top:8px}
-  .c3-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;background:var(--ds-panel);
-    border:1px solid var(--ds-border);border-radius:10px;overflow:hidden}
-  .c3-table th,.c3-table td{padding:8px 12px;border:1px solid var(--ds-border);text-align:left;vertical-align:top}
-  .c3-table th{background:var(--ds-code-bg);color:var(--ds-muted);font-weight:600}
+  /* 正文统一：板块导语 sec-note / 表图下方口径注 note（脚注档 12.5px muted） */
+  .sec-note{color:var(--ds-muted);font-size:13.5px;line-height:1.6;margin:0 0 16px}
+  .sec-note.tight{margin-bottom:6px}
+  .note{font-size:12.5px;color:var(--ds-muted);margin-top:10px;line-height:1.65}
   @media(max-width:720px){.filmstrip{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -62,7 +62,7 @@
 
     <section class="ds-section">
       <h2 class="ds-h2">演示</h2>
-      <p class="ds-muted" style="font-size:14px;margin:0 0 4px">4 个真实驾驶 clip（各均匀采样 6 帧，前视广角相机）。点击场景切换，点击帧放大。</p>
+      <p class="sec-note tight">4 个真实驾驶 clip（各均匀采样 6 帧，前视广角相机）。点击场景切换，点击帧放大。</p>
       <div class="clip-sel" id="clipSel"></div>
       <div class="filmstrip" id="filmstrip"></div>
       <div class="desc-panel">
@@ -74,8 +74,9 @@
 
     <section class="ds-section">
       <h2 class="ds-h2">评测结果</h2>
-      <p class="ds-muted" style="font-size:14px;margin:0 0 4px">测试数据集：自建驾驶域基准 n=184——PhysicalAI-AV 真实帧 + 人工校验的 8 选 1 单选标注（随机基线 12.5%），单一评测集、无训练/测试划分。上方演示是自由描述（定性），这里是 reasoner 在同一基准下的定量精度。完整口径与诚实边界见 <a href="../cosmos3.html">Phase W 报告 §W.2</a>。</p>
-      <table class="c3-table">
+      <p class="sec-note tight">测试数据集：自建驾驶域基准 n=184——PhysicalAI-AV 真实帧 + 人工校验的 8 选 1 单选标注（随机基线 12.5%），单一评测集、无训练/测试划分。上方演示是自由描述（定性），这里是 reasoner 在同一基准下的定量精度。完整口径与诚实边界见 <a href="../cosmos3.html">Phase W 报告 §W.2</a>。</p>
+      <div class="ds-tablewrap">
+      <table class="ds-table">
         <caption>表 1 · 自建驾驶域基准（n=184）上的精度对比</caption>
         <tr><th>模型</th><th>n=184 精度</th><th>说明</th></tr>
         <tr><td><strong>Cosmos3-Edge 2B FP16（本页演示模型）</strong></td><td><strong>42.4%</strong></td><td>Wilson 95% CI [35.5, 49.6] · 3.4× 随机基线（12.5%）</td></tr>
@@ -83,21 +84,69 @@
         <tr><td>Cosmos-Reason2-8B INT8</td><td>47.8%</td><td>−3.8 pts</td></tr>
         <tr><td>Cosmos-Reason2-8B INT4</td><td>50.5%</td><td>−1.1 pts</td></tr>
       </table>
-      <p class="ds-muted" style="font-size:13px;margin-top:8px">跨代对比：Cosmos3-Edge 2B 比上代 Cosmos-Reason2-8B FP16 低 9.2 pts（McNemar p=0.0115，显著）——<strong>缩小模型不免费</strong>；而 8B 的量化版（INT8/INT4）相对 FP16 掉点很小——<strong>量化几乎免费</strong>。Cosmos3-Edge 2B 仍达随机基线 3.4×、具备真实场景理解；184/184 全部 EOS、零解析失败。</p>
+      </div>
+      <p class="note">跨代对比：Cosmos3-Edge 2B 比上代 Cosmos-Reason2-8B FP16 低 9.2 pts（McNemar p=0.0115，显著）——<strong>缩小模型不免费</strong>；而 8B 的量化版（INT8/INT4）相对 FP16 掉点很小——<strong>量化几乎免费</strong>。Cosmos3-Edge 2B 仍达随机基线 3.4×、具备真实场景理解；184/184 全部 EOS、零解析失败。</p>
     </section>
 
     <section class="ds-section">
       <h2 class="ds-h2">核心方法</h2>
-      <table class="c3-table">
+      <div class="ds-dgwrap">
+        <svg class="ds-dg" viewBox="0 0 980 306" role="img" aria-label="Cosmos3-Edge 2B reasoner 的 Orin 推理链：左侧两个输入（6 帧 @448×256 前视广角 120° 相机、prompt 自由描述或问题加 8 选项）进入 Jetson Orin · TRT 10.7 · TRTEdge 0.10.1 部署区，区内 visual 引擎 940M（分解注意力 K4/K6 补丁，绕开 TRT-11-only 算子墙）串到 llm 引擎 3.7G（2B VL reasoner · FP16），右侧输出自由场景描述（greedy · max 200 tokens，演示）与 8 选 1 单选字母（parse_choice · n=184 · unparsed=0，评测）；~0.9 s / 请求（n=184 口径）">
+          <defs>
+            <marker id="c3-dg-arr" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+              <polygon points="0 0, 9 3.5, 0 7" fill="var(--ds-faint)"/>
+            </marker>
+          </defs>
+          <!-- 层 1：部署区域边界（琥珀 warn = 硬件/部署） -->
+          <rect class="dg-region" x="228" y="40" width="444" height="212" rx="10" style="stroke:var(--ds-warn)"/>
+          <text class="dg-tag" x="450" y="64" text-anchor="middle" fill="var(--ds-warn)">Jetson Orin · TRT 10.7 · TRTEdge 0.10.1</text>
+          <!-- 层 2：连线 -->
+          <line class="dg-edge" x1="180" y1="116" x2="248" y2="116" marker-end="url(#c3-dg-arr)"/>
+          <path class="dg-edge" d="M180 232 H555 V150" marker-end="url(#c3-dg-arr)"/>
+          <line class="dg-edge" x1="398" y1="116" x2="470" y2="116" marker-end="url(#c3-dg-arr)"/>
+          <line class="dg-edge dg-dash" x1="327" y1="146" x2="327" y2="170" marker-end="url(#c3-dg-arr)"/>
+          <path class="dg-edge" d="M636 116 H692"/>
+          <line class="dg-edge" x1="692" y1="116" x2="731" y2="116" marker-end="url(#c3-dg-arr)"/>
+          <path class="dg-edge" d="M692 116 V232 H731" marker-end="url(#c3-dg-arr)"/>
+          <!-- 层 3：盒子（蓝 accent = 输入 · 紫 alt = 模型/推理 · 绿 ok = 输出 · 红 danger = 补丁） -->
+          <rect x="30" y="86" width="150" height="60" rx="8" fill="var(--ds-accent-soft)" stroke="var(--ds-accent)" stroke-width="1.4"/>
+          <rect x="30" y="202" width="150" height="60" rx="8" fill="var(--ds-accent-soft)" stroke="var(--ds-accent)" stroke-width="1.4"/>
+          <rect x="252" y="86" width="150" height="60" rx="8" fill="var(--ds-alt-soft)" stroke="var(--ds-alt)" stroke-width="1.4"/>
+          <rect x="474" y="86" width="162" height="60" rx="8" fill="var(--ds-alt-soft)" stroke="var(--ds-alt)" stroke-width="1.4"/>
+          <rect x="244" y="174" width="166" height="30" rx="15" fill="var(--ds-danger-soft)" stroke="var(--ds-danger-ring)"/>
+          <rect x="735" y="86" width="215" height="60" rx="8" fill="var(--ds-ok-soft)" stroke="var(--ds-ok)" stroke-width="1.4"/>
+          <rect x="735" y="202" width="215" height="60" rx="8" fill="var(--ds-ok-soft)" stroke="var(--ds-ok)" stroke-width="1.4"/>
+          <!-- 层 4：文字 -->
+          <text class="dg-name" x="105" y="112" text-anchor="middle">6 帧 @448×256</text>
+          <text class="dg-sub" x="105" y="126" text-anchor="middle">前视广角 120° 相机</text>
+          <text class="dg-name" x="105" y="228" text-anchor="middle">prompt</text>
+          <text class="dg-sub" x="105" y="242" text-anchor="middle">自由描述 / 问题+8 选项</text>
+          <text class="dg-name" x="327" y="112" text-anchor="middle">visual 引擎 940M</text>
+          <text class="dg-sub" x="327" y="126" text-anchor="middle">分解注意力 K4/K6 补丁</text>
+          <text class="dg-name" x="555" y="112" text-anchor="middle">llm 引擎 3.7G</text>
+          <text class="dg-sub" x="555" y="126" text-anchor="middle">2B VL reasoner · FP16</text>
+          <text class="dg-tag" x="327" y="193" text-anchor="middle" fill="var(--ds-danger)">绕开 TRT-11-only 算子墙</text>
+          <text class="dg-name" x="842.5" y="112" text-anchor="middle">自由场景描述</text>
+          <text class="dg-sub" x="842.5" y="126" text-anchor="middle">greedy · max 200 tokens（演示）</text>
+          <text class="dg-name" x="842.5" y="221" text-anchor="middle">8 选 1 单选字母</text>
+          <text class="dg-sub" x="842.5" y="234" text-anchor="middle">parse_choice · n=184</text>
+          <text class="dg-sub" x="842.5" y="248" text-anchor="middle">unparsed=0（评测）</text>
+          <text class="dg-note" x="490" y="282" text-anchor="middle">~0.9 s / 请求（n=184 口径）</text>
+        </svg>
+      </div>
+      <p class="ds-figcap">图 1 · Cosmos3-Edge 2B reasoner 的 Orin 推理链：6 帧 + prompt → visual / llm 双引擎（分解注意力补丁绕开 TRT-11-only 算子墙）→ 自由描述（演示）与 8 选 1 单选（评测 n=184）两种输出</p>
+      <div class="ds-tablewrap">
+      <table class="ds-table">
         <caption>表 2 · 部署配置与关键口径</caption>
         <tr><th>项</th><th>值</th></tr>
-        <tr><td>模型</td><td>Cosmos3-Edge（4B 全模态 = 2B VL reasoner + rectified-flow 扩散专家），本页用 reasoner</td></tr>
-        <tr><td>引擎</td><td>FP16，llm 3.7G + visual 940M（<strong>分解注意力版</strong>，K4/K6 绕过 TRT-11-only 算子墙）</td></tr>
-        <tr><td>硬件 / 运行时</td><td>Jetson Orin sm_87 · JetPack 6.2 · TensorRT 10.7 · TRTEdge v0.10.1</td></tr>
-        <tr><td>输入</td><td><strong>自由描述（演示）</strong>：6 帧 @448×256 + 自由描述 prompt（maxInputLen 2048）；<strong>8 选 1 单选（评测 n=184）</strong>：6 帧（前视广角 120° 相机）+ 问题与 8 个选项</td></tr>
-        <tr><td>输出</td><td><strong>自由描述</strong>：自由场景描述文本（greedy，max 200 tokens）；<strong>单选</strong>：选项字母（如 "B"，经 parse_choice 解析，n=184 上 unparsed=0）</td></tr>
-        <tr><td>延迟</td><td>~0.9 s / 请求（n=184 基准口径）</td></tr>
+        <tr><td class="rowh">模型</td><td>Cosmos3-Edge（4B 全模态 = 2B VL reasoner + rectified-flow 扩散专家），本页用 reasoner</td></tr>
+        <tr><td class="rowh">引擎</td><td>FP16，llm 3.7G + visual 940M（<strong>分解注意力版</strong>，K4/K6 绕过 TRT-11-only 算子墙）</td></tr>
+        <tr><td class="rowh">硬件 / 运行时</td><td>Jetson Orin sm_87 · JetPack 6.2 · TensorRT 10.7 · TRTEdge v0.10.1</td></tr>
+        <tr><td class="rowh">输入</td><td><strong>自由描述（演示）</strong>：6 帧 @448×256 + 自由描述 prompt（maxInputLen 2048）；<strong>8 选 1 单选（评测 n=184）</strong>：6 帧（前视广角 120° 相机）+ 问题与 8 个选项</td></tr>
+        <tr><td class="rowh">输出</td><td><strong>自由描述</strong>：自由场景描述文本（greedy，max 200 tokens）；<strong>单选</strong>：选项字母（如 "B"，经 parse_choice 解析，n=184 上 unparsed=0）</td></tr>
+        <tr><td class="rowh">延迟</td><td>~0.9 s / 请求（n=184 基准口径）</td></tr>
       </table>
+      </div>
     </section>
 
     <footer class="ds-footer">
