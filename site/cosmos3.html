@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cosmos3-Edge · 跨代精度对比（n=184 驾驶域）</title>
+<meta name="description" content="一套 TensorRT-Edge 管线部署多代 NVIDIA Physical AI 模型的跨代验证：Cosmos3-Edge 2B reasoner vs 上一代 Cosmos-Reason2-8B 量化版，自建驾驶域基准 n=184，「缩小模型不免费、量化几乎免费」。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🚗</text></svg>">
+<style>
+:root{--bg:#fff;--bg2:#f8f9fa;--bg3:#e9ecef;--text:#1a1a2e;--text2:#495057;--muted:#868e96;--accent:#4361ee;--accentL:#eef2ff;--accentD:#3a0ca3;--border:#dee2e6;--ok:#2ecc71;--warn:#f39c12;--err:#e74c3c;--info:#3498db;--nav-h:52px}
+[data-theme=dark]{--bg:#0f0f1a;--bg2:#1a1a2e;--bg3:#2a2a3e;--text:#e0e0e0;--text2:#adb5bd;--muted:#6c757d;--accent:#7b8cff;--accentL:#1a1a3e;--accentD:#a5b4fc;--border:#2a2a3e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px}
+.top-nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;z-index:1000}
+.top-nav .logo{font-weight:700;font-size:15px;color:var(--accent);text-decoration:none}
+.top-nav .tabs{display:flex;gap:2px;margin-left:22px;overflow-x:auto}
+.top-nav .tab{padding:5px 12px;border-radius:5px;font-size:13px;color:var(--text2);text-decoration:none;border:1px solid transparent;white-space:nowrap}
+.top-nav .tab:hover{background:var(--bg3)}
+.top-nav .tab.active{background:var(--accentL);color:var(--accentD);font-weight:600;border-color:var(--border)}
+.top-nav .right{margin-left:auto;display:flex;gap:8px}
+.top-nav a.btn,.theme-btn{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--text);text-decoration:none}
+.wrap{max-width:920px;margin:0 auto;padding:calc(var(--nav-h) + 32px) 24px 64px}
+h1{font-size:30px;font-weight:800;margin-bottom:8px;line-height:1.3}
+.lede{font-size:15px;color:var(--muted);margin-bottom:20px}
+h2{font-size:23px;font-weight:700;margin:40px 0 14px;padding-bottom:6px;border-bottom:2px solid var(--accentL)}
+h3{font-size:17.5px;font-weight:600;margin:22px 0 8px}
+p{margin-bottom:10px;color:var(--text2)}
+strong{color:var(--text)}
+ul,ol{margin:6px 0 12px 24px;color:var(--text2)}
+li{margin-bottom:6px}
+ol li{padding-left:3px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 8px}
+.badge{background:var(--accentL);color:var(--accentD);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600}
+.callout{padding:15px 17px;border-radius:8px;margin:16px 0;border-left:4px solid var(--info);background:var(--bg2);font-size:15px}
+.callout.ok{border-left-color:var(--ok)} .callout.warn{border-left-color:var(--warn)}
+.callout .t{font-weight:700;font-size:13px;margin-bottom:4px;color:var(--text)}
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14.5px;border-top:2px solid var(--text);border-bottom:2px solid var(--text)}
+th,td{padding:8px 12px;border:none;text-align:left;vertical-align:top}
+th{background:none;color:var(--text);font-weight:600;border-bottom:1px solid var(--text)}
+.win{color:var(--accent);font-weight:700}
+caption{caption-side:top;text-align:center;font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.55}
+caption strong{color:var(--accentD)}
+td .sub{display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px}
+figure{margin:18px 0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px}
+figure img{width:100%;height:auto;border-radius:5px;display:block;cursor:zoom-in}
+/* 双主题插图（2026-11-03）：亮 figures/ + 暗 figures/dark/（FIG_THEME=dark 重渲染，
+   底色 #1a1a2e = 暗色 figure 卡片 --bg2）；CSS 按 data-theme 切换、暗图 lazy；
+   图注颜色走 fc-* 类、表注走 .tnote，随主题翻转（替代原内联硬编码色） */
+figure img.fig-d{display:none}
+[data-theme=dark] figure img.fig-l{display:none}
+[data-theme=dark] figure img.fig-d{display:block}
+.tnote{background:#f8fafc;font-size:12.5px;color:#475569}
+[data-theme=dark] .tnote{background:var(--bg3);color:var(--text2)}
+figcaption{font-size:13.5px;color:var(--muted);margin-top:10px;text-align:center;line-height:1.65}
+figcaption .zoom{color:var(--accent);font-weight:600}
+figcaption b{display:inline-block;min-width:3.2em;color:var(--accentD);font-weight:700}
+code{font-family:"JetBrains Mono","Fira Code",monospace;font-size:13px;background:var(--bg3);padding:1px 5px;border-radius:3px;color:var(--accent)}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--muted)}
+footer a{color:var(--accent)}
+@media(max-width:720px){.wrap{padding:calc(var(--nav-h) + 20px) 16px 48px}h1{font-size:23px}.top-nav .tabs{margin-left:10px}table{display:block;overflow-x:auto}}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <a href="https://ranpin.github.io/" class="logo">← Ranpin</a>
+  <div class="tabs">
+    <a class="tab" href="https://ranpin.github.io/alpamayo-edge/">CR2-8B 量化部署</a>
+    <a class="tab active" href="https://ranpin.github.io/cosmos3-edge/cosmos3.html">Cosmos3 跨代对比</a>
+    <a class="tab" href="https://ranpin.github.io/alpamayo-edge/r1-trajectory/">R1 轨迹 Demo</a>
+  </div>
+  <div class="right">
+    <a class="btn" href="https://github.com/ranpin/cosmos3-edge" target="_blank">GitHub 源码</a>
+    <button class="theme-btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark'">◐ 主题</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>Cosmos3-Edge 跨代精度对比：n=184 驾驶域</h1>
+  <div class="badges">
+    <span class="badge">一套管线部署多代模型</span><span class="badge">n=184 驾驶域基准</span>
+    <span class="badge">同帧同题 · 唯一变量=模型</span><span class="badge">跨代验证</span>
+  </div>
+
+  <p style="margin:14px 0"><a href="https://ranpin.github.io/cosmos3-edge/cosmos3-demo/" target="_blank" rel="noopener" style="display:inline-block;background:var(--accent);color:#fff;padding:9px 18px;border-radius:7px;text-decoration:none;font-weight:600;font-size:14.5px">🎬 在线 Demo · Cosmos3-Edge 2B 驾驶场景理解（真实 Orin 推理输出）</a></p>
+
+  <h2>摘要</h2>
+  <p>alpamayo-edge 仓用<strong>一套 TensorRT-Edge 管线部署多代 NVIDIA Physical AI 模型</strong>。把同一把尺子（自建驾驶域基准 <strong>n=184</strong>，同帧、同题、同标答）量到两代 reasoner 上——上一代 <strong>Cosmos-Reason2-8B</strong> 与新一代 <strong>Cosmos3-Edge 的 2B VL reasoner</strong>——做跨代精度对比，验证「<strong>缩小模型不免费、量化几乎免费</strong>」这一部署策略结论是否在第二个模型家族上成立。<span style="color:var(--muted)">零预算 · 零训练 · 全 Orin。</span></p>
+  <p style="font-size:13px;color:var(--muted)">本页是跨代精度对比专篇，与 Cosmos3-Edge 的其余证据同仓：<strong>部署细节</strong>（六道 JetPack 6.2 兼容墙、分解注意力/RoPE 补丁、动作表示）见 <a href="https://github.com/ranpin/cosmos3-edge/blob/main/docs/DEPLOYMENT.md" target="_blank" rel="noopener" style="color:var(--accent)">docs/DEPLOYMENT.md</a>，<strong>policy 动作链</strong>（DROID 机器人操作）见 <a href="https://github.com/ranpin/cosmos3-edge/tree/main/eval/policy" target="_blank" rel="noopener" style="color:var(--accent)">eval/policy/</a>。第一阶段（CR2-8B 量化部署，图 1–21 / 表 1–13）见 <a href="https://ranpin.github.io/alpamayo-edge/" style="color:var(--accent)">CR2-8B 量化部署</a>。</p>
+
+  <h2>一、跨代对比：n=184 驾驶域（同帧同题，唯一变量 = 模型）</h2>
+  <p>协议与 alpamayo-edge 主页 §1.11/§1.12 <strong>完全一致</strong>（同帧、同题、同标答、贪心、cap 12、6 帧 @448），唯一变量是模型。输入直接复用 <code>bench/ood_eval/ood_input_goat.json</code>（messages 格式模型无关，runtime 用引擎目录内自己的 chat template）。打分复用同一套解析 / Wilson CI / McNemar 实现，故与 CR2-8B 各档<strong>方法学逐位可比</strong>。</p>
+  <figure><img class="fig-l" src="figures/cosmos3_crossgen.png" alt="cross-generation driving-domain accuracy"><img class="fig-d" src="figures/dark/cosmos3_crossgen.png" alt="cross-generation driving-domain accuracy" loading="lazy"><figcaption><b>图 1 · 驾驶域 n=184 跨代对比（8 选 1，随机基线 12.5%）</b><br><b>横轴</b>：四个模型档——CR2-8B 的 FP16/INT8/INT4 与 Cosmos3-Edge 2B FP16；<b>竖轴</b>：正确率 %，误差棒 = Wilson 95%CI<br><b>结果</b>：Cosmos3-Edge 2B 42.4% [35.5,49.6]，比 CR2-8B FP16 的 51.6% 低 9.2 pts，McNemar b/c=29/12、p=0.0115 <strong>显著</strong>；而 CR2-8B 自己的 INT8/INT4 掉点（−3.8/−1.1）均不显著<br><b>分析</b>：把"代际差"与"量化差"放在同一张图上，结论一目了然——<strong>量化几乎免费（掉点 &lt; MDE≈7pts、不显著），缩小模型不免费（−9.2 pts、显著）</strong>。2B reasoner 仍是随机基线的 3.4×，有真实场景理解力，但显著输给上一代 8B 的量化版。此图数字全部由 <code>eval/cosmos3/cosmos3_viz.py</code> 从原始输出重算（Cosmos3 k=78/184、unparsed=0），非手填。</figcaption></figure>
+  <table>
+    <caption><strong>表 1</strong>　Reasoner 跨代对比（n=184，8 选 1，随机基线 12.5%；Wilson 95%CI、McNemar vs CR2-8B FP16）。</caption>
+    <tr><th>模型</th><th>正确率</th><th>Wilson 95%CI</th><th>vs CR2-8B FP16</th><th>E2E/请求</th></tr>
+    <tr><td>CR2-8B FP16（goat）</td><td><strong>51.6%</strong></td><td>[44.5, 58.7]</td><td>—</td><td>~1.2 s</td></tr>
+    <tr><td>CR2-8B INT8（dog）</td><td>47.8%</td><td>[40.7, 55.0]</td><td>−3.8 pts（p=0.143 ns）</td><td>0.50 s</td></tr>
+    <tr><td>CR2-8B INT4（dog）</td><td>50.5%</td><td>[43.4, 57.7]</td><td>−1.1 pts（p=0.815 ns）</td><td>0.68 s</td></tr>
+    <tr><td><strong>Cosmos3-Edge 2B FP16（goat）</strong></td><td><strong>42.4%</strong></td><td>[35.5, 49.6]</td><td class="win">−9.2 pts（b/c=29/12，p=0.0115 显著）</td><td>0.91 s</td></tr>
+    <tr><td colspan="5" class="tnote">184/184 全 EOS、零解析失败、字母分布均衡（A17 B22 C20 D23 E29 F26 G19 H28，无坍缩）。引擎：FP16，llm 3.7G + visual 940M（分解注意力版）。</td></tr>
+  </table>
+
+  <h2>二、思考讨论</h2>
+  <div class="callout ok">
+    <div class="t">跨代结论：「缩小不免费、量化几乎免费」在第二个模型家族上成立</div>
+    第一阶段在 CR2-8B 上得到"量化几乎免费、2B 显著掉点"（alpamayo-edge 主页结论 2）；这里把同一把尺子（同帧同题 n=184）量到 Cosmos3-Edge：<strong>新一代 2B reasoner（42.4%）显著输给上一代 8B 的量化版（INT4 50.5% / INT8 47.8%）</strong>。两个独立模型家族同向 ⇒ 该结论不是 CR2 单家的偶然，强化了部署策略"激进量化 + 保留大模型"。
+  </div>
+  <h3>诚实的边界</h3>
+  <ul>
+    <li><strong>Reasoner 侧</strong>：n=184 ⇒ MDE ≈ 7 pts，更小差异测不出；驾驶域标注是 clip 级事件聚类、train split 无法排除训练见过（同 alpamayo-edge 主页 §1.11 边界，对跨代对照不受影响）。</li>
+    <li><strong>帧必须缩到长边 448</strong>：原生 1920×1088 = 2040 token/帧，6 帧 12240 &gt; 引擎 maxInputLen 2048 会失败；缩后与 n=184 同口径。</li>
+  </ul>
+  <p style="font-size:13px;color:var(--muted)">Cosmos3-Edge 的部署打通（六道 JetPack 6.2 兼容墙、分解注意力/RoPE 补丁）见本仓 <a href="https://github.com/ranpin/cosmos3-edge/blob/main/docs/DEPLOYMENT.md" target="_blank" rel="noopener" style="color:var(--accent)">docs/DEPLOYMENT.md</a>；policy 动作链（DROID 机器人操作，部署打通 + conditioning 弱耦合边界）见 <a href="https://github.com/ranpin/cosmos3-edge/tree/main/eval/policy" target="_blank" rel="noopener" style="color:var(--accent)">eval/policy/</a>。</p>
+
+  <footer>
+    源码与完整文档：<a href="https://github.com/ranpin/cosmos3-edge" target="_blank">github.com/ranpin/cosmos3-edge</a> · CR2-8B 第一阶段与多代主线：<a href="https://github.com/ranpin/alpamayo-edge" target="_blank">github.com/ranpin/alpamayo-edge</a><br>
+    跨代评测 <code>eval/cosmos3/README.md</code> · 第一阶段 <a href="https://ranpin.github.io/alpamayo-edge/">CR2-8B 量化部署</a>
+  </footer>
+</div>
+
+<div id="lb" style="position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:2000;cursor:zoom-out;padding:24px"><span style="position:fixed;top:14px;right:18px;color:#fff;font-size:13px;opacity:.85">点击任意处关闭 · Esc</span><img alt="放大图" style="max-width:96vw;max-height:90vh;width:auto;height:auto;border-radius:6px;box-shadow:0 10px 48px rgba(0,0,0,.6);background:#fff"></div>
+<script>
+(function(){
+  var lb=document.getElementById('lb'), im=lb.querySelector('img');
+  document.querySelectorAll('figure img').forEach(function(g){
+    g.addEventListener('click', function(){ im.src=g.currentSrc||g.src; lb.style.display='flex'; });
+  });
+  function close(){ lb.style.display='none'; im.removeAttribute('src'); }
+  lb.addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+})();
+</script>
+</body>
+</html>

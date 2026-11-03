@@ -5,10 +5,12 @@
 **DROID 机器人操作（policy 动作链）**。全部为 Orin 实机推理输出，非模拟。
 
 🎬 **在线 Demo（reasoning 侧·真实驾驶场景自由描述）**：<https://ranpin.github.io/cosmos3-edge/cosmos3-demo/>
+📊 **跨代精度对比专篇（n=184 驾驶域，Cosmos3-Edge 2B vs CR2-8B 三精度）**：<https://ranpin.github.io/cosmos3-edge/cosmos3.html>
 
 > 本仓从 `ranpin/alpamayo-edge` 拆出，聚焦 Cosmos3-Edge 世界模型。**AV VLA（Alpamayo-R1）轨迹预测**
-> 与 **CR2-8B 量化**、以及 Cosmos3 vs CR2-8B 的**跨代精度对比**仍在 alpamayo-edge（那是"一套 TRTEdge
-> 管线部署多代 NVIDIA Physical AI 模型"的研究主线）。
+> 与 **CR2-8B 量化**仍在 alpamayo-edge（那是"一套 TRTEdge 管线部署多代 NVIDIA Physical AI 模型"的
+> 研究主线）；Cosmos3 vs CR2-8B 的**跨代精度对比**（n=184 数据 + 呈现页）已于 2026-11-03 迁入本仓
+> （`eval/cosmos3/` + `site/cosmos3.html`，CR2 侧对照数据以 `ref_cr2/` 副本随迁）。
 
 ## 模型
 
@@ -25,7 +27,8 @@ Cosmos3-Edge = **2B VL reasoner + rectified-flow 扩散动作专家**（MoT 单�
 - **在线 demo**：4 个公开 sample clip 的自由场景描述（商业区白天 / 施工锥桶 / 夜间左转道 / 夜间 stop sign 行人），
   真实 Orin 推理输出。
 - 协议与 CR2-8B 评测完全一致（同帧、同题、同标答、贪心、cap 12、6 帧 @448），唯一变量是模型；
-  **跨代对比结论**（新一代 2B 在驾驶域显著输给上一代 8B 量化版）见 alpamayo-edge。
+  **跨代对比结论**（新一代 2B 在驾驶域显著输给上一代 8B 量化版，McNemar p=0.0115）见
+  [跨代对比专篇](https://ranpin.github.io/cosmos3-edge/cosmos3.html)（本仓 `site/cosmos3.html`）。
 
 ### 2. DROID Policy 动作链 —— 部署打通 + 诚实边界
 
@@ -60,9 +63,12 @@ n=184 基准的复现命令与产物见 `eval/`。推理需 Jetson AGX Orin 实�
 ## 仓库结构与文档导航
 
 ```
+eval/cosmos3/       reasoner n=184 驾驶域跨代对比（原始输出 + viz 脚本 + ref_cr2/ CR2 对照数据副本）
 eval/policy/        DROID 操作评测：W3 帧敏感性 + W4 conditioning 敏感性（脚本 + 证据 JSON）
 scripts/orin/       Orin 部署脚本：TRTEdge build / reasoning+policy engine build / 分解注意力补丁
+site/cosmos3.html   跨代精度对比专篇（gh-pages 源）
 site/cosmos3-demo/  reasoning 自由描述 demo（gh-pages 源，4 公开 clip）
+site/figures/       站点插图（亮色 + dark/ 暗色变体，FIG_THEME=dark 重渲染）
 docs/DEPLOYMENT.md  部署细节：六道 JetPack 6.2 兼容墙 + 分解注意力/RoPE 补丁 + 动作表示
 docs/PROBLEMS.md    工程问题记录（§K/§L，迁自 alpamayo-edge）：现象 → 根因 → 解决 → 教训
 ```
@@ -71,5 +77,6 @@ docs/PROBLEMS.md    工程问题记录（§K/§L，迁自 alpamayo-edge）：现
 
 - 代码 **MIT**（见 LICENSE）。
 - reasoning demo 帧取自 **dgural 公开样本**（NVIDIA PhysicalAI-AV 的公开 100-clip 子集）。
-- n=184 基准的逐 clip 数据涉及 gated `nvidia/PhysicalAI-Autonomous-Vehicles`；其完整 benchmark 与跨代
-  对比留在 alpamayo-edge 仓，本仓只引用 Cosmos3 自身的聚合准确率。
+- n=184 基准的逐 clip 数据涉及 gated `nvidia/PhysicalAI-Autonomous-Vehicles`；跨代对比数据与呈现页
+  已于 2026-11-03 自 alpamayo-edge 迁入本仓（`eval/cosmos3/` 原始输出 + `ref_cr2/` CR2 对照副本，
+  与 alpamayo-edge 已公开内容一致，canonical CR2 数据仍在 alpamayo-edge）。

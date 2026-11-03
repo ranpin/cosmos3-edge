@@ -1,0 +1,208 @@
+{
+ "n": 184,
+ "chance_pct": 12.5,
+ "reference": "fp16",
+ "runs": {
+  "fp16": {
+   "overall": 51.630434782608695,
+   "ci": [
+    44.45054746674689,
+    58.743635562714026
+   ],
+   "unparsed": 0,
+   "letter_dist": {
+    "A": 23,
+    "B": 25,
+    "C": 19,
+    "D": 25,
+    "E": 20,
+    "F": 31,
+    "G": 23,
+    "H": 18
+   },
+   "mcnemar_p_vs_ref": null,
+   "discordant_b_c": [
+    0,
+    0
+   ],
+   "per_class": {
+    "ANIMALS_BIRDS_ROADKILL": {
+     "acc": 30.434782608695652,
+     "n": 23
+    },
+    "COMPLEX_INTERSECTION_INTERACTION": {
+     "acc": 65.21739130434783,
+     "n": 23
+    },
+    "CYCLISTS_AND_MICROMOBILITY_COMPLEX": {
+     "acc": 21.73913043478261,
+     "n": 23
+    },
+    "EMERGENCY_INCIDENT_SCENE": {
+     "acc": 56.52173913043478,
+     "n": 23
+    },
+    "PEDESTRIAN_DENSITY_OR_CLOSE_PROXIMITY": {
+     "acc": 78.26086956521739,
+     "n": 23
+    },
+    "ROAD_DEBRIS_OR_SAFETY_TRACES": {
+     "acc": 30.434782608695652,
+     "n": 23
+    },
+    "SPECIAL_OR_UNCOMMON_VEHICLE_BEHAVIOR": {
+     "acc": 43.47826086956522,
+     "n": 23
+    },
+    "WORK_ZONES_TEMP_TRAFFIC_CONTROL": {
+     "acc": 86.95652173913044,
+     "n": 23
+    }
+   },
+   "per_split": {
+    "train": {
+     "acc": 51.94805194805195,
+     "n": 154
+    },
+    "val": {
+     "acc": 50.0,
+     "n": 30
+    }
+   }
+  },
+  "int8": {
+   "overall": 47.82608695652174,
+   "ci": [
+    40.72689898021519,
+    55.01419031383694
+   ],
+   "unparsed": 0,
+   "letter_dist": {
+    "A": 24,
+    "B": 22,
+    "C": 19,
+    "D": 20,
+    "E": 22,
+    "F": 28,
+    "G": 28,
+    "H": 21
+   },
+   "mcnemar_p_vs_ref": 0.143463134765625,
+   "discordant_b_c": [
+    12,
+    5
+   ],
+   "per_class": {
+    "ANIMALS_BIRDS_ROADKILL": {
+     "acc": 34.78260869565217,
+     "n": 23
+    },
+    "COMPLEX_INTERSECTION_INTERACTION": {
+     "acc": 56.52173913043478,
+     "n": 23
+    },
+    "CYCLISTS_AND_MICROMOBILITY_COMPLEX": {
+     "acc": 8.695652173913043,
+     "n": 23
+    },
+    "EMERGENCY_INCIDENT_SCENE": {
+     "acc": 56.52173913043478,
+     "n": 23
+    },
+    "PEDESTRIAN_DENSITY_OR_CLOSE_PROXIMITY": {
+     "acc": 78.26086956521739,
+     "n": 23
+    },
+    "ROAD_DEBRIS_OR_SAFETY_TRACES": {
+     "acc": 34.78260869565217,
+     "n": 23
+    },
+    "SPECIAL_OR_UNCOMMON_VEHICLE_BEHAVIOR": {
+     "acc": 30.434782608695652,
+     "n": 23
+    },
+    "WORK_ZONES_TEMP_TRAFFIC_CONTROL": {
+     "acc": 82.6086956521739,
+     "n": 23
+    }
+   },
+   "per_split": {
+    "train": {
+     "acc": 48.05194805194805,
+     "n": 154
+    },
+    "val": {
+     "acc": 46.666666666666664,
+     "n": 30
+    }
+   }
+  },
+  "int4": {
+   "overall": 50.54347826086956,
+   "ci": [
+    43.3825087933295,
+    57.682218883157475
+   ],
+   "unparsed": 0,
+   "letter_dist": {
+    "A": 27,
+    "B": 23,
+    "C": 14,
+    "D": 25,
+    "E": 18,
+    "F": 34,
+    "G": 24,
+    "H": 19
+   },
+   "mcnemar_p_vs_ref": 0.8145294189453125,
+   "discordant_b_c": [
+    10,
+    8
+   ],
+   "per_class": {
+    "ANIMALS_BIRDS_ROADKILL": {
+     "acc": 26.08695652173913,
+     "n": 23
+    },
+    "COMPLEX_INTERSECTION_INTERACTION": {
+     "acc": 56.52173913043478,
+     "n": 23
+    },
+    "CYCLISTS_AND_MICROMOBILITY_COMPLEX": {
+     "acc": 34.78260869565217,
+     "n": 23
+    },
+    "EMERGENCY_INCIDENT_SCENE": {
+     "acc": 47.82608695652174,
+     "n": 23
+    },
+    "PEDESTRIAN_DENSITY_OR_CLOSE_PROXIMITY": {
+     "acc": 78.26086956521739,
+     "n": 23
+    },
+    "ROAD_DEBRIS_OR_SAFETY_TRACES": {
+     "acc": 34.78260869565217,
+     "n": 23
+    },
+    "SPECIAL_OR_UNCOMMON_VEHICLE_BEHAVIOR": {
+     "acc": 43.47826086956522,
+     "n": 23
+    },
+    "WORK_ZONES_TEMP_TRAFFIC_CONTROL": {
+     "acc": 82.6086956521739,
+     "n": 23
+    }
+   },
+   "per_split": {
+    "train": {
+     "acc": 50.0,
+     "n": 154
+    },
+    "val": {
+     "acc": 53.333333333333336,
+     "n": 30
+    }
+   }
+  }
+ }
+}
