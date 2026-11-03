@@ -5,6 +5,7 @@
 **DROID 机器人操作（policy 动作链）**。全部为 Orin 实机推理输出，非模拟。
 
 🎬 **在线 Demo（reasoning 侧·真实驾驶场景自由描述）**：<https://ranpin.github.io/cosmos3-edge/cosmos3-demo/>
+
 📊 **跨代精度对比专篇（n=184 驾驶域，Cosmos3-Edge 2B vs CR2-8B 三精度）**：<https://ranpin.github.io/cosmos3-edge/cosmos3.html>
 
 > 本仓从 `ranpin/alpamayo-edge` 拆出，聚焦 Cosmos3-Edge 世界模型。**AV VLA（Alpamayo-R1）轨迹预测**
