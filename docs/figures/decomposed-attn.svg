@@ -1,0 +1,292 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 880">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-grid: #1e293b;
+      --mask: #0f172a;
+      --text: white;
+      --text-muted: #94a3b8;
+      --arrow: #64748b;
+      --color-primary-fill: rgba(8,51,68,0.4);
+      --color-primary-stroke: #22d3ee;
+      --color-secondary-fill: rgba(6,78,59,0.4);
+      --color-secondary-stroke: #34d399;
+      --color-tertiary-fill: rgba(76,29,149,0.4);
+      --color-tertiary-stroke: #a78bfa;
+      --color-accent-fill: rgba(120,53,15,0.3);
+      --color-accent-stroke: #fbbf24;
+      --color-alert-fill: rgba(136,19,55,0.4);
+      --color-alert-stroke: #fb7185;
+      --color-connector-fill: rgba(251,146,60,0.3);
+      --color-connector-stroke: #fb923c;
+      --color-neutral-fill: rgba(30,41,59,0.5);
+      --color-neutral-stroke: #94a3b8;
+      --color-highlight-fill: rgba(59,130,246,0.3);
+      --color-highlight-stroke: #60a5fa;
+    }
+    text { font-family: 'JetBrains Mono', 'Noto Sans SC', 'PingFang SC', 'SF Mono', 'Cascadia Code', monospace; }
+  </style>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--bg-grid)" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="var(--arrow)"/>
+    </marker>
+    <marker id="arrow-secondary" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="var(--color-secondary-stroke)"/>
+    </marker>
+    <marker id="arrow-alert" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="var(--color-alert-stroke)"/>
+    </marker>
+  </defs>
+
+  <!-- background -->
+  <rect width="100%" height="100%" fill="var(--bg)"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+
+  <!-- title block -->
+  <text x="40" y="50" fill="var(--text)" font-size="16" font-weight="700">分解注意力：块对角 ragged self-attention（纯基础算子分解实现）</text>
+  <text x="40" y="70" fill="var(--text-muted)" font-size="9">cosmos3-edge · scripts/orin/apply_decomposed_attn_patch.py · USE_DECOMPOSED_ATTN=1 · 图中数值为 448 档口径</text>
+
+  <!-- panel boundaries -->
+  <rect x="40" y="88" width="1120" height="132" rx="10" fill="none" stroke="var(--text-muted)" stroke-opacity="0.3" stroke-dasharray="8,4"/>
+  <rect x="40" y="232" width="1120" height="292" rx="10" fill="none" stroke="var(--text-muted)" stroke-opacity="0.3" stroke-dasharray="8,4"/>
+  <rect x="40" y="556" width="1120" height="218" rx="10" fill="none" stroke="var(--text-muted)" stroke-opacity="0.3" stroke-dasharray="8,4"/>
+
+  <!-- ================= arrows (under boxes) ================= -->
+  <!-- (b) in_seg -> MatMul -> Greater -> grid -->
+  <line x1="208" y1="362" x2="278" y2="362" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="382" y1="362" x2="448" y2="362" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="542" y1="362" x2="598" y2="362" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- cross-panel: same_seg -> Where -->
+  <path d="M 690 512 L 690 584 L 524 584 L 524 604" fill="none" stroke="var(--color-secondary-stroke)" stroke-width="1.5" marker-end="url(#arrow-secondary)"/>
+  <!-- (c) chain arrows -->
+  <line x1="162" y1="636" x2="198" y2="636" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="284" y1="636" x2="320" y2="636" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="420" y1="636" x2="476" y2="636" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="568" y1="636" x2="624" y2="636" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="716" y1="636" x2="752" y2="636" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="844" y1="636" x2="880" y2="636" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="966" y1="636" x2="1002" y2="636" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- neg -> Where -->
+  <line x1="522" y1="710" x2="522" y2="668" stroke="var(--color-alert-stroke)" stroke-width="1.2" marker-end="url(#arrow-alert)"/>
+  <!-- V bypass: QKV -> MatMul@V -->
+  <path d="M 108 666 L 108 756 L 798 756 L 798 668" fill="none" stroke="var(--arrow)" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- ================= (a) packed sequence ================= -->
+  <text x="56" y="110" fill="var(--text)" font-size="12" font-weight="700">(a) packed 序列：6 帧 × 112 token 打包为一条序列（T=672），cu_seqlens 记录段边界</text>
+  <g>
+    <rect x="100" y="124" width="160" height="44" fill="var(--mask)"/>
+    <rect x="100" y="124" width="160" height="44" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.5"/>
+    <rect x="260" y="124" width="160" height="44" fill="var(--mask)"/>
+    <rect x="260" y="124" width="160" height="44" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.5"/>
+    <rect x="420" y="124" width="160" height="44" fill="var(--mask)"/>
+    <rect x="420" y="124" width="160" height="44" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.5"/>
+    <rect x="580" y="124" width="160" height="44" fill="var(--mask)"/>
+    <rect x="580" y="124" width="160" height="44" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.5"/>
+    <rect x="740" y="124" width="160" height="44" fill="var(--mask)"/>
+    <rect x="740" y="124" width="160" height="44" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.5"/>
+    <rect x="900" y="124" width="160" height="44" fill="var(--mask)"/>
+    <rect x="900" y="124" width="160" height="44" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.5"/>
+  </g>
+  <g text-anchor="middle">
+    <text x="180" y="143" fill="var(--text)" font-size="11" font-weight="600">seg 0</text>
+    <text x="180" y="159" fill="var(--text-muted)" font-size="9">[0:112]</text>
+    <text x="340" y="143" fill="var(--text)" font-size="11" font-weight="600">seg 1</text>
+    <text x="340" y="159" fill="var(--text-muted)" font-size="9">[112:224]</text>
+    <text x="500" y="143" fill="var(--text)" font-size="11" font-weight="600">seg 2</text>
+    <text x="500" y="159" fill="var(--text-muted)" font-size="9">[224:336]</text>
+    <text x="660" y="143" fill="var(--text)" font-size="11" font-weight="600">seg 3</text>
+    <text x="660" y="159" fill="var(--text-muted)" font-size="9">[336:448]</text>
+    <text x="820" y="143" fill="var(--text)" font-size="11" font-weight="600">seg 4</text>
+    <text x="820" y="159" fill="var(--text-muted)" font-size="9">[448:560]</text>
+    <text x="980" y="143" fill="var(--text)" font-size="11" font-weight="600">seg 5</text>
+    <text x="980" y="159" fill="var(--text-muted)" font-size="9">[560:672]</text>
+  </g>
+  <g stroke="var(--arrow)" stroke-width="1">
+    <line x1="100" y1="168" x2="100" y2="177"/>
+    <line x1="260" y1="168" x2="260" y2="177"/>
+    <line x1="420" y1="168" x2="420" y2="177"/>
+    <line x1="580" y1="168" x2="580" y2="177"/>
+    <line x1="740" y1="168" x2="740" y2="177"/>
+    <line x1="900" y1="168" x2="900" y2="177"/>
+    <line x1="1060" y1="168" x2="1060" y2="177"/>
+  </g>
+  <g text-anchor="middle" fill="var(--text-muted)" font-size="9">
+    <text x="100" y="190">0</text>
+    <text x="260" y="190">112</text>
+    <text x="420" y="190">224</text>
+    <text x="580" y="190">336</text>
+    <text x="740" y="190">448</text>
+    <text x="900" y="190">560</text>
+    <text x="1060" y="190">672</text>
+  </g>
+  <text x="580" y="208" fill="var(--text-muted)" font-size="9" text-anchor="middle">cu_seqlens [F+1] = [0, 112, 224, 336, 448, 560, 672] · starts = cu_seqlens[:-1]，ends = cu_seqlens[1:]（Slice + Cast int64）</text>
+
+  <!-- ================= (b) mask construction ================= -->
+  <text x="56" y="250" fill="var(--text)" font-size="12" font-weight="700">(b) 掩码构建：same_seg = (in_seg @ in_segᵀ) &gt; 0.5</text>
+
+  <!-- in_seg matrix [T,F] -->
+  <text x="173" y="267" fill="var(--text-muted)" font-size="8" text-anchor="middle">列 f = 0…5 →</text>
+  <rect x="140" y="272" width="66" height="180" fill="var(--mask)"/>
+  <rect x="140" y="272" width="66" height="180" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1"/>
+  <g stroke="var(--text-muted)" stroke-opacity="0.25" stroke-width="0.8">
+    <line x1="140" y1="302" x2="206" y2="302"/>
+    <line x1="140" y1="332" x2="206" y2="332"/>
+    <line x1="140" y1="362" x2="206" y2="362"/>
+    <line x1="140" y1="392" x2="206" y2="392"/>
+    <line x1="140" y1="422" x2="206" y2="422"/>
+  </g>
+  <g fill="var(--color-secondary-fill)" stroke="var(--color-secondary-stroke)" stroke-width="1">
+    <rect x="140" y="272" width="11" height="30"/>
+    <rect x="151" y="302" width="11" height="30"/>
+    <rect x="162" y="332" width="11" height="30"/>
+    <rect x="173" y="362" width="11" height="30"/>
+    <rect x="184" y="392" width="11" height="30"/>
+    <rect x="195" y="422" width="11" height="30"/>
+  </g>
+  <g text-anchor="middle">
+    <text x="173" y="474" fill="var(--text)" font-size="11" font-weight="600">in_seg [T,F]</text>
+    <text x="173" y="491" fill="var(--text-muted)" font-size="8">one-hot：行 t ↓ × 列 f →</text>
+    <text x="173" y="507" fill="var(--text-muted)" font-size="8">idx≥starts &amp; idx&lt;ends（Range/Greater/Less/And）</text>
+  </g>
+
+  <!-- MatMul + Greater nodes -->
+  <rect x="280" y="337" width="100" height="50" rx="6" fill="var(--mask)"/>
+  <rect x="280" y="337" width="100" height="50" rx="6" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1.5"/>
+  <text x="330" y="357" fill="var(--text)" font-size="11" font-weight="600" text-anchor="middle">MatMul</text>
+  <text x="330" y="373" fill="var(--text-muted)" font-size="9" text-anchor="middle">@ in_segᵀ</text>
+
+  <rect x="450" y="337" width="90" height="50" rx="6" fill="var(--mask)"/>
+  <rect x="450" y="337" width="90" height="50" rx="6" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1.5"/>
+  <text x="495" y="357" fill="var(--text)" font-size="11" font-weight="600" text-anchor="middle">Greater</text>
+  <text x="495" y="373" fill="var(--text-muted)" font-size="8" text-anchor="middle">&gt; 0.5 → bool</text>
+
+  <text x="243" y="352" fill="var(--text-muted)" font-size="8" text-anchor="middle">[T,F]</text>
+  <text x="415" y="400" fill="var(--text-muted)" font-size="8" text-anchor="middle">one-hot 内积：同段=1 / 跨段=0</text>
+  <text x="570" y="352" fill="var(--text-muted)" font-size="8" text-anchor="middle">[T,T]</text>
+
+  <!-- same_seg grid [T,T] -->
+  <text x="690" y="267" fill="var(--text-muted)" font-size="8" text-anchor="middle">key 段 →</text>
+  <rect x="600" y="272" width="180" height="180" fill="var(--mask)"/>
+  <rect x="600" y="272" width="180" height="180" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1"/>
+  <g stroke="var(--text-muted)" stroke-opacity="0.2" stroke-width="0.8">
+    <line x1="630" y1="272" x2="630" y2="452"/>
+    <line x1="660" y1="272" x2="660" y2="452"/>
+    <line x1="690" y1="272" x2="690" y2="452"/>
+    <line x1="720" y1="272" x2="720" y2="452"/>
+    <line x1="750" y1="272" x2="750" y2="452"/>
+    <line x1="600" y1="302" x2="780" y2="302"/>
+    <line x1="600" y1="332" x2="780" y2="332"/>
+    <line x1="600" y1="362" x2="780" y2="362"/>
+    <line x1="600" y1="392" x2="780" y2="392"/>
+    <line x1="600" y1="422" x2="780" y2="422"/>
+  </g>
+  <g fill="var(--color-secondary-fill)" stroke="var(--color-secondary-stroke)" stroke-width="1.2">
+    <rect x="600" y="272" width="30" height="30"/>
+    <rect x="630" y="302" width="30" height="30"/>
+    <rect x="660" y="332" width="30" height="30"/>
+    <rect x="690" y="362" width="30" height="30"/>
+    <rect x="720" y="392" width="30" height="30"/>
+    <rect x="750" y="422" width="30" height="30"/>
+  </g>
+  <g fill="var(--text)" font-size="9" text-anchor="middle">
+    <text x="615" y="291">1</text>
+    <text x="645" y="321">1</text>
+    <text x="675" y="351">1</text>
+    <text x="705" y="381">1</text>
+    <text x="735" y="411">1</text>
+    <text x="765" y="441">1</text>
+  </g>
+  <g text-anchor="middle">
+    <text x="690" y="474" fill="var(--text)" font-size="11" font-weight="600">same_seg [T,T]</text>
+    <text x="690" y="491" fill="var(--text-muted)" font-size="8">行 = query token ↓ · 列 = key token → · 每格 = 112×112 token 块</text>
+    <text x="690" y="507" fill="var(--text-muted)" font-size="8">1 = 同段可注意 · 0 = 跨段 → 在 (c) 中被 neg 替换</text>
+  </g>
+  <text x="700" y="556" fill="var(--color-secondary-stroke)" font-size="8">same_seg [T,T] · unsqueeze(0) → 广播 [H,T,T]</text>
+
+  <!-- ================= (c) masked attention op chain ================= -->
+  <text x="56" y="582" fill="var(--text)" font-size="12" font-weight="700">(c) 掩码注意力：基础算子链（任何 TRT 版本可解析，Myelin 自动融合）</text>
+
+  <!-- Q,K,V input -->
+  <rect x="56" y="608" width="104" height="56" rx="6" fill="var(--mask)"/>
+  <rect x="56" y="608" width="104" height="56" rx="6" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.5"/>
+  <text x="108" y="630" fill="var(--text)" font-size="11" font-weight="600" text-anchor="middle">Q, K, V</text>
+  <text x="108" y="648" fill="var(--text-muted)" font-size="9" text-anchor="middle">[T,H,D]</text>
+
+  <!-- Transpose -->
+  <rect x="200" y="608" width="82" height="56" rx="6" fill="var(--mask)"/>
+  <rect x="200" y="608" width="82" height="56" rx="6" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1.5"/>
+  <text x="241" y="630" fill="var(--text)" font-size="10" font-weight="600" text-anchor="middle">Transpose</text>
+  <text x="241" y="648" fill="var(--text-muted)" font-size="8" text-anchor="middle">→ [H,T,D]</text>
+
+  <!-- MatMul QK^T -->
+  <rect x="322" y="608" width="96" height="56" rx="6" fill="var(--mask)"/>
+  <rect x="322" y="608" width="96" height="56" rx="6" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1.5"/>
+  <text x="370" y="630" fill="var(--text)" font-size="11" font-weight="600" text-anchor="middle">MatMul</text>
+  <text x="370" y="648" fill="var(--text-muted)" font-size="8" text-anchor="middle">QKᵀ × scale</text>
+  <text x="448" y="600" fill="var(--text-muted)" font-size="8" text-anchor="middle">scores [H,T,T]</text>
+
+  <!-- Where (mask injection) -->
+  <rect x="478" y="608" width="88" height="56" rx="6" fill="var(--mask)"/>
+  <rect x="478" y="608" width="88" height="56" rx="6" fill="var(--color-highlight-fill)" stroke="var(--color-highlight-stroke)" stroke-width="1.5"/>
+  <text x="522" y="630" fill="var(--text)" font-size="11" font-weight="700" text-anchor="middle">Where</text>
+  <text x="522" y="648" fill="var(--text-muted)" font-size="8" text-anchor="middle">mask 注入</text>
+  <text x="596" y="600" fill="var(--text-muted)" font-size="8" text-anchor="middle">masked [H,T,T]</text>
+
+  <!-- Softmax -->
+  <rect x="626" y="608" width="88" height="56" rx="6" fill="var(--mask)"/>
+  <rect x="626" y="608" width="88" height="56" rx="6" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1.5"/>
+  <text x="670" y="630" fill="var(--text)" font-size="11" font-weight="600" text-anchor="middle">Softmax</text>
+  <text x="670" y="648" fill="var(--text-muted)" font-size="8" text-anchor="middle">dim = −1</text>
+  <text x="734" y="600" fill="var(--text-muted)" font-size="8" text-anchor="middle">attn [H,T,T]</text>
+
+  <!-- MatMul @V -->
+  <rect x="754" y="608" width="88" height="56" rx="6" fill="var(--mask)"/>
+  <rect x="754" y="608" width="88" height="56" rx="6" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1.5"/>
+  <text x="798" y="630" fill="var(--text)" font-size="11" font-weight="600" text-anchor="middle">MatMul</text>
+  <text x="798" y="648" fill="var(--text-muted)" font-size="9" text-anchor="middle">@ V</text>
+  <text x="862" y="600" fill="var(--text-muted)" font-size="8" text-anchor="middle">[H,T,D]</text>
+
+  <!-- Transpose back -->
+  <rect x="882" y="608" width="82" height="56" rx="6" fill="var(--mask)"/>
+  <rect x="882" y="608" width="82" height="56" rx="6" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1.5"/>
+  <text x="923" y="630" fill="var(--text)" font-size="10" font-weight="600" text-anchor="middle">Transpose</text>
+  <text x="923" y="648" fill="var(--text-muted)" font-size="8" text-anchor="middle">→ [T,H,D]</text>
+
+  <!-- out -->
+  <rect x="1004" y="608" width="104" height="56" rx="6" fill="var(--mask)"/>
+  <rect x="1004" y="608" width="104" height="56" rx="6" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.5"/>
+  <text x="1056" y="630" fill="var(--text)" font-size="11" font-weight="600" text-anchor="middle">out</text>
+  <text x="1056" y="648" fill="var(--text-muted)" font-size="9" text-anchor="middle">[T,H,D]</text>
+
+  <!-- neg constant -->
+  <rect x="484" y="712" width="76" height="34" rx="6" fill="var(--mask)"/>
+  <rect x="484" y="712" width="76" height="34" rx="6" fill="var(--color-alert-fill)" stroke="var(--color-alert-stroke)" stroke-width="1.5"/>
+  <text x="522" y="727" fill="var(--text)" font-size="10" font-weight="600" text-anchor="middle">neg</text>
+  <text x="522" y="740" fill="var(--text-muted)" font-size="7" text-anchor="middle">finfo(dtype).min</text>
+  <text x="572" y="734" fill="var(--color-alert-stroke)" font-size="8">fp16 = −65504，效果同 −∞</text>
+
+  <!-- V bypass label -->
+  <text x="450" y="750" fill="var(--text-muted)" font-size="8" text-anchor="middle">V [H,T,D]（permute 后）</text>
+
+  <!-- ================= footer notes ================= -->
+  <text x="56" y="790" fill="var(--text-muted)" font-size="9">为什么需要：JP 6.2（TRT 10.7 / CUDA 12.6）上两条内建注意力路径都不可用——ViTAttentionPlugin 仅 CuTe DSL FMHA（sm_87 的 cuda12 预编译件上游刻意不含）；TRT_Attention 需 TRT ≥ 11（parser 11.0 / ragged 11.1）。</text>
+  <text x="56" y="806" fill="var(--text-muted)" font-size="9">代价：scores 为稠密 [H,T,T]——448 档 T=672 无压力；原生 1080p×6（T=12240）≈ 4.8 GB fp16，高分辨率档慎用。</text>
+  <text x="56" y="822" fill="var(--text-muted)" font-size="9">算子集：Range / Slice / Cast / Greater / Less / And / MatMul / Where / Softmax / Transpose —— 任何 TRT 版本可解析，Myelin 自行融合。</text>
+
+  <!-- ================= legend ================= -->
+  <g>
+    <rect x="257" y="842" width="12" height="12" fill="var(--color-primary-fill)" stroke="var(--color-primary-stroke)" stroke-width="1.2"/>
+    <text x="275" y="852" fill="var(--text-muted)" font-size="9">张量 / packed token</text>
+    <rect x="417" y="842" width="12" height="12" fill="var(--color-neutral-fill)" stroke="var(--color-neutral-stroke)" stroke-width="1.2"/>
+    <text x="435" y="852" fill="var(--text-muted)" font-size="9">基础算子</text>
+    <rect x="502" y="842" width="12" height="12" fill="var(--color-secondary-fill)" stroke="var(--color-secondary-stroke)" stroke-width="1.2"/>
+    <text x="520" y="852" fill="var(--text-muted)" font-size="9">mask = 1（同段可注意）</text>
+    <rect x="677" y="842" width="12" height="12" fill="var(--color-alert-fill)" stroke="var(--color-alert-stroke)" stroke-width="1.2"/>
+    <text x="695" y="852" fill="var(--text-muted)" font-size="9">neg（跨段替换值）</text>
+    <rect x="822" y="842" width="12" height="12" fill="var(--color-highlight-fill)" stroke="var(--color-highlight-stroke)" stroke-width="1.2"/>
+    <text x="840" y="852" fill="var(--text-muted)" font-size="9">Where（mask 注入点）</text>
+  </g>
+</svg>

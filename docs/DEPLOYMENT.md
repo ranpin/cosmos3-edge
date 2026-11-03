@@ -31,7 +31,7 @@ ONNX `Attention`/`RotaryEmbedding`）同源同解；K6 是 policy 链唯一通�
 
 K4（visual）与 K6（policy）同源：TRTEdge 把注意力/RoPE 经 `trt::attention_onnx`/`trt::rope_onnx` custom op
 lower 成**只有 TRT≥11 parser 认识**的算子。解法 = 在导出前把它们**用基础 ONNX 算子分解掉**，任何 TRT 版本
-可解析，TRT 用 Myelin 自行融合：
+可解析，TRT 用 Myelin 自行融合（visual 侧机理见图 1）：
 
 - **decomposed_attention**：GQA 折批 grouped matmul + arange 下三角 causal 掩码，覆盖 und 的 is_causal=True
   自注意力与 gen 的 is_causal=False 对 cat([und,gen]) 的交叉注意力（GQA H=16/Hkv=8）。
@@ -40,6 +40,13 @@ lower 成**只有 TRT≥11 parser 认识**的算子。解法 = 在导出前把�
 - **门控与对拍**：env `USE_DECOMPOSED_POLICY=1`，两个 modeling 文件 import 换包装器（additive，不动已工作的
   reasoning 路径）。分解实现先经 `test_policy_decomposed.py` 数值对拍（attention vs
   `F.scaled_dot_product_attention` err~1e-7、rope vs LLaMA 全维公式 err=0）再导出——避免 ~1h 导出后才发现语义 bug。
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="figures/dark/decomposed-attn.png">
+  <img src="figures/decomposed-attn.png" alt="分解注意力机理图：(a) packed 序列与 cu_seqlens 段边界；(b) in_seg@in_segᵀ&gt;0.5 构建 T×T 块对角掩码；(c) Transpose→MatMul→Where→Softmax→MatMul→Transpose 基础算子链，每条箭头标注张量 shape">
+</picture>
+
+*图 1：visual 侧（K4）块对角 ragged self-attention 的分解实现机理（`apply_decomposed_attn_patch.py`；图中数值为 448 档口径：F=6 段 × 112 token = T=672）。policy 侧（K6）的 `decomposed_attention` 同一套路，掩码换成 arange 下三角 causal（und）或无掩码（gen 交叉注意力），并加 GQA 折批。源 SVG：`figures/decomposed-attn.svg`（baoyu-diagram 规范，可再生双主题）。*
 
 脚本：`scripts/orin/apply_policy_decomposed_patch.py`（policy）、`scripts/orin/apply_decomposed_attn_patch.py`
 （visual）、`scripts/orin/test_policy_decomposed.py`（对拍）。
